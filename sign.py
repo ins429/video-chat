@@ -14,7 +14,7 @@ secret = "iC/qlJtdzEeqM5/9kg+PUPHFZu9gkfCMXxmVebIVt6xdYcVCMphQ0cbLwu+jcIJL33+EJh
 request_uri = f"{resource_endpoint}{path_and_query}"
 
 # Endpoint identities?api-version=2021-03-07 accepts list of scopes as a body.
-body = { "createTokenWithScopes": ["chat"] }
+body = { "createTokenWithScopes": ["voip"] }
 
 serialized_body = json.dumps(body)
 content = serialized_body.encode("utf-8")
