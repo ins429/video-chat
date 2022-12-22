@@ -5,3 +5,5 @@
 [QuickStart: Add 1:1 video calling to your app](https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/voice-video-calling/get-started-with-video-calling?pivots=platform-web)
 
 [Quickstart: Handle voice and video calling events](https://learn.microsoft.com/en-us/azure/communication-services/quickstarts/voice-video-calling/handle-calling-events?source=recommendations)
+
+[Communication services web calling tutorial](https://github.com/Azure-Samples/communication-services-web-calling-tutorial)
