@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import "./App.css";
 
 import {
@@ -7,13 +7,22 @@ import {
   VideoStreamRenderer,
   LocalVideoStream,
 } from "@azure/communication-calling";
-import { AzureCommunicationTokenCredential } from "@azure/communication-common";
-import { AzureLogger, setLogLevel } from "@azure/logger";
+import {AzureCommunicationTokenCredential} from "@azure/communication-common";
+import {AzureLogger, setLogLevel} from "@azure/logger";
 
-import { acsId, token } from "./creds";
+import {acsId, token} from "./creds";
+
+function uuidv4() {
+  // @ts-ignore
+  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, c =>
+    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+  );
+}
+
 
 function App() {
   const localVideoContainer = useRef(null);
+  const remoteVideosGallery = useRef(null);
   const [calleeAcsUserId, setCalleeAcsUserId] = useState(acsId);
   const [userAccessToken, setUserAccessToken] = useState(token);
   const [isLocalVideoContainerHidden, setIslocalVideoContainerHidden] =
@@ -47,16 +56,8 @@ function App() {
         console.log(`pjlee Call state changed: ${call.state}`);
         if (call.state === "Connected") {
           setIsConnected(true);
-          // acceptCallButton.disabled = true;
-          // startCallButton.disabled = true;
-          // startVideoButton.disabled = false;
-          // stopVideoButton.disabled = false;
-          // remoteVideosGallery.hidden = false;
         } else if (call.state === "Disconnected") {
           setIsConnected(false);
-          // startCallButton.disabled = false;
-          // startVideoButton.disabled = true;
-          // stopVideoButton.disabled = true;
           console.log(
             `pjlee Call ended, call end reason={code=${call.callEndReason.code}, subCode=${call.callEndReason.subCode}}`,
             call,
@@ -76,11 +77,13 @@ function App() {
         console.log("pjlee localVideoStreamsUpdated", e);
         // @ts-ignore
         e.added.forEach(async (lvs) => {
+          console.log('pjlee 000', lvs)
           setLocalVideoStream(lvs);
           await displayLocalVideoStream(lvs);
         });
         // @ts-ignore
         e.removed.forEach((lvs) => {
+          console.log('pjlee 111', lvs)
           removeLocalVideoStream();
         });
       });
@@ -231,7 +234,8 @@ function App() {
         view = await renderer.createView();
         // Attach the renderer view to the UI.
         remoteVideoContainer.appendChild(view.target);
-        // remoteVideosGallery.appendChild(remoteVideoContainer);
+        // @ts-ignore
+        remoteVideosGallery.current?.appendChild(remoteVideoContainer);
       };
 
       // Remote participant has switched video on/off
@@ -242,7 +246,8 @@ function App() {
           } else {
             // @ts-ignore
             view.dispose();
-            // remoteVideosGallery.removeChild(remoteVideoContainer);
+            // @ts-ignore
+            remoteVideosGallery.current?.removeChild(remoteVideoContainer);
           }
         } catch (e) {
           console.error(e);
@@ -276,7 +281,7 @@ function App() {
         id="user-access-token"
         type="text"
         placeholder="User access token"
-        style={{ marginBottom: "1em", width: "500px" }}
+        style={{marginBottom: "1em", width: "500px"}}
         value={userAccessToken}
         onChange={(e) => setUserAccessToken(e.target.value)}
       />
@@ -291,11 +296,11 @@ function App() {
             const tokenCredential = new AzureCommunicationTokenCredential(
               userAccessToken.trim()
             );
-            console.log("pjlee", { tokenCredential });
+            console.log("pjlee", {tokenCredential});
             const _callAgent = await callClient.createCallAgent(
               tokenCredential
             );
-            console.log("pjlee", { _callAgent });
+            console.log("pjlee", {_callAgent});
             // Set up a camera device to use.
             const _deviceManager = await callClient.getDeviceManager();
             await _deviceManager.askDevicePermission({
@@ -333,7 +338,7 @@ function App() {
         id="callee-acs-user-id"
         type="text"
         placeholder="Enter callee's Azure Communication Services user identity in format: '8:acs:resourceId_userId'"
-        style={{ marginBottom: "1em", width: "500px", display: "block" }}
+        style={{marginBottom: "1em", width: "500px", display: "block"}}
         value={calleeAcsUserId}
         onChange={(e) => setCalleeAcsUserId(e.target.value)}
       />
@@ -349,13 +354,17 @@ function App() {
             const localVideoStream = await createLocalVideoStream();
             console.log("pjlee start call localVideoStream", localVideoStream);
             const videoOptions = localVideoStream
-              ? { localVideoStreams: [localVideoStream] }
+              ? {localVideoStreams: [localVideoStream]}
               : undefined;
-            const _call = callAgent?.startCall(
-              // @ts-ignore
-              [{ communicationUserId: calleeAcsUserId.trim() }],
-              { videoOptions }
+            // const groupId = uuidv4()
+            const groupId = "c385a2d0-3e8a-456d-bc64-68a6f717d3aa";
+            // @ts-ignore
+            const _call = callAgent?.join(
+              {groupId},
+              {videoOptions}
             );
+
+            console.log('pjlee call started', {_call, groupId});
             // Subscribe to the call's properties and events.
             subscribeToCall(_call);
             // @ts-ignore
@@ -387,10 +396,10 @@ function App() {
           try {
             const localVideoStream = await createLocalVideoStream();
             const videoOptions = localVideoStream
-              ? { localVideoStreams: [localVideoStream] }
+              ? {localVideoStreams: [localVideoStream]}
               : undefined;
             // @ts-ignore
-            const _call = await incomingCall.accept({ videoOptions });
+            const _call = await incomingCall.accept({videoOptions});
             // Subscribe to the call's properties and events.
             subscribeToCall(_call);
             setCall(_call);
@@ -436,15 +445,16 @@ function App() {
       <br />
       <div
         id="connectedLabel"
-        style={{ color: "#13bb13" }}
+        style={{color: "#13bb13"}}
         hidden={!isConnected}
       >
         Call is connected!
       </div>
       <br />
       <div
+        ref={remoteVideosGallery}
         id="remoteVideosGallery"
-        style={{ width: "40%" }}
+        style={{width: "40%"}}
         hidden={!isConnected}
       >
         Remote participants' video streams:
@@ -452,7 +462,7 @@ function App() {
       <br />
       <div
         ref={localVideoContainer}
-        style={{ width: "30%" }}
+        style={{width: "30%"}}
         hidden={isLocalVideoContainerHidden}
       >
         Local video stream:
