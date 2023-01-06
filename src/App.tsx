@@ -9,6 +9,11 @@ const App = () => {
   return (
     <ApolloProvider client={client}>
       <CurrentUserProvider>
+        {false && (
+          <div style={{ fontSize: 300 }}>
+            🂡 <span style={{ color: "red" }}>🂱</span>
+          </div>
+        )}
         <Router />
       </CurrentUserProvider>
     </ApolloProvider>

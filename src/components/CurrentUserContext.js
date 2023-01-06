@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from "react";
+import React, { createContext } from "react";
 import { gql, useQuery } from "@apollo/client";
 import useUserUpdatedSubscription from "../hooks/subscriptions/useUserUpdated";
 
@@ -11,7 +11,7 @@ const CURRENT_USER_QUERY = gql`
       name
       email
       acsId
-      accessToken
+      communicationAccessToken
       createdAt
     }
   }

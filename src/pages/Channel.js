@@ -1,16 +1,37 @@
-import React from 'react'
-import Messenger from 'components/Messenger'
-import { useParams } from 'react-router-dom'
+import React, { useEffect } from "react";
+import { useParams } from "react-router-dom";
+import useJoinChatChannelMutation from "hooks/mutations/useJoinChannel";
+import Video from "../components/Video";
 
 const Channel = () => {
-  const { channelId } = useParams()
+  const { channelName } = useParams();
+  const [
+    joinChatChannel,
+    {
+      data: joinChatChannelData,
+      loading: joinChatChannelLoading,
+      error: joinChatChannelError,
+    },
+  ] = useJoinChatChannelMutation();
+
+  useEffect(() => {
+    joinChatChannel(channelName);
+  }, [joinChatChannel]);
+
+  useEffect(() => {
+    console.log("joinChatChannelData", joinChatChannelData);
+  }, [joinChatChannelData]);
 
   return (
     <div>
       channel page
-      <Messenger channelId={channelId} />
+      {joinChatChannelLoading ? (
+        "Loading..."
+      ) : (
+        <Video channel={joinChatChannelData?.joinChatChannel} />
+      )}
     </div>
-  )
-}
+  );
+};
 
-export default Channel
+export default Channel;

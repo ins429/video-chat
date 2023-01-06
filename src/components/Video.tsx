@@ -5,7 +5,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-// import "./App.css";
 
 import {
   CallAgent,
@@ -17,30 +16,20 @@ import { AzureCommunicationTokenCredential } from "@azure/communication-common";
 import { AzureLogger, setLogLevel } from "@azure/logger";
 import CurrentUserContext from "./CurrentUserContext";
 
-// import { acsId, token } from "./creds";
+type Channel = {
+  id: String;
+  name: String;
+};
 
-function uuidv4() {
-  // @ts-ignore
-  return ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
-    (
-      c ^
-      (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
-    ).toString(16)
-  );
-}
-
-function App() {
+const Video = ({ channel }: { channel: Channel }) => {
   const { currentUser } = useContext(CurrentUserContext);
   const localVideoContainer = useRef(null);
   const remoteVideosGallery = useRef(null);
   const [calleeAcsUserId, setCalleeAcsUserId] = useState(currentUser.acsId);
   const [userAccessToken, setUserAccessToken] = useState(
-    currentUser.accessToken
+    currentUser.communicationAccessToken
   );
   const [isLocalVideoContainerHidden, setIslocalVideoContainerHidden] =
-    useState(true);
-  const [isConnectedLabelHidden, setIsConnectedLabelHidden] = useState(true);
-  const [isRemoteVideosGalleryHidden, setIsRemoteVideosGalleryHidden] =
     useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [callAgent, setCallAgent] = useState<CallAgent | null>(null);
@@ -55,23 +44,23 @@ function App() {
   const subscribeToCall = useCallback((call) => {
     try {
       // Inspect the initial call.id value.
-      console.log(`pjlee Call Id: ${call.id}`);
+      console.log(`Call Id: ${call.id}`);
       //Subscribe to call's 'idChanged' event for value changes.
       call.on("idChanged", () => {
-        console.log(`pjlee Call Id changed: ${call.id}`);
+        console.log(`Call Id changed: ${call.id}`);
       });
 
       // Inspect the initial call.state value.
-      console.log(`pjlee Call state: ${call.state}`);
+      console.log(`Call state: ${call.state}`);
       // Subscribe to call's 'stateChanged' event for value changes.
       call.on("stateChanged", async () => {
-        console.log(`pjlee Call state changed: ${call.state}`);
+        console.log(`Call state changed: ${call.state}`);
         if (call.state === "Connected") {
           setIsConnected(true);
         } else if (call.state === "Disconnected") {
           setIsConnected(false);
           console.log(
-            `pjlee Call ended, call end reason={code=${call.callEndReason.code}, subCode=${call.callEndReason.subCode}}`,
+            `Call ended, call end reason={code=${call.callEndReason.code}, subCode=${call.callEndReason.subCode}}`,
             call,
             call.callEndReason
           );
@@ -80,22 +69,20 @@ function App() {
 
       // @ts-ignore
       call.localVideoStreams.forEach(async (lvs) => {
-        console.log("pjlee call.localVideoStreams", lvs);
+        console.log("call.localVideoStreams", lvs);
         setLocalVideoStream(lvs);
         await displayLocalVideoStream(lvs);
       });
       // @ts-ignore
       call.on("localVideoStreamsUpdated", (e) => {
-        console.log("pjlee localVideoStreamsUpdated", e);
+        console.log("localVideoStreamsUpdated", e);
         // @ts-ignore
         e.added.forEach(async (lvs) => {
-          console.log("pjlee 000", lvs);
           setLocalVideoStream(lvs);
           await displayLocalVideoStream(lvs);
         });
         // @ts-ignore
         e.removed.forEach((lvs) => {
-          console.log("pjlee 111", lvs);
           removeLocalVideoStream();
         });
       });
@@ -138,21 +125,19 @@ function App() {
   const displayLocalVideoStream = useCallback(
     async (lvs: any) => {
       try {
-        console.log("pjlee displayLocalVideoStream localVideoStream", lvs);
         const _localVideoStreamRenderer = new VideoStreamRenderer(
           // @ts-ignore
           lvs
         );
         // @ts-ignore
         const view = await _localVideoStreamRenderer.createView();
-        console.log("pjlee view", view);
         // @ts-ignore
         setLocalVideoStreamRenderer(_localVideoStreamRenderer);
         // @ts-ignore
         localVideoContainer.current?.appendChild(view.target);
         setIslocalVideoContainerHidden(false);
       } catch (error) {
-        console.error("pjlee err displayLocalVideoStream", {
+        console.error("err displayLocalVideoStream", {
           error,
           lvs,
         });
@@ -302,17 +287,13 @@ function App() {
         type="button"
         onClick={async () => {
           try {
-            console.log("pjlee 0");
             const callClient = new CallClient();
-            console.log("pjlee 1");
             const tokenCredential = new AzureCommunicationTokenCredential(
               userAccessToken.trim()
             );
-            console.log("pjlee", { tokenCredential });
             const _callAgent = await callClient.createCallAgent(
               tokenCredential
             );
-            console.log("pjlee", { _callAgent });
             // Set up a camera device to use.
             const _deviceManager = await callClient.getDeviceManager();
             await _deviceManager.askDevicePermission({
@@ -364,16 +345,13 @@ function App() {
               console.log("call agent not ready");
             }
             const localVideoStream = await createLocalVideoStream();
-            console.log("pjlee start call localVideoStream", localVideoStream);
             const videoOptions = localVideoStream
               ? { localVideoStreams: [localVideoStream] }
               : undefined;
-            // const groupId = uuidv4()
-            const groupId = "c385a2d0-3e8a-456d-bc64-68a6f717d3aa";
+            const groupId = channel.id;
             // @ts-ignore
             const _call = callAgent?.join({ groupId }, { videoOptions });
 
-            console.log("pjlee call started", { _call, groupId });
             // Subscribe to the call's properties and events.
             subscribeToCall(_call);
             // @ts-ignore
@@ -478,6 +456,6 @@ function App() {
       </div>
     </div>
   );
-}
+};
 
-export default App;
+export default Video;
