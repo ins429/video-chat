@@ -4,6 +4,8 @@ import useUserUpdatedSubscription from "../hooks/subscriptions/useUserUpdated";
 
 const CurrentUserContext = createContext();
 
+export let token = "";
+
 const CURRENT_USER_QUERY = gql`
   query CurrentUser {
     user {
@@ -30,8 +32,13 @@ const UserUpdatedSubscription = ({ userId }) => {
 
 export const CurrentUserProvider = ({ children }) => {
   const { loading: loadingSessionToken } = useQuery(SESSION_TOKEN_QUERY, {
-    onCompleted: ({ sessionToken }) =>
-      localStorage.setItem("token", sessionToken),
+    onCompleted: ({ sessionToken }) => {
+      if (localStorage) {
+        localStorage.setItem("token", sessionToken);
+      } else {
+        token = sessionToken;
+      }
+    },
   });
 
   const {

@@ -269,6 +269,43 @@ const Video = ({ channel }: { channel: Channel }) => {
     AzureLogger.log = (...args: any[]) => {
       console.log(...args);
     };
+
+    const initializeCallAgent = async () => {
+      try {
+        const callClient = new CallClient();
+        const tokenCredential = new AzureCommunicationTokenCredential(
+          userAccessToken.trim()
+        );
+        const _callAgent = await callClient.createCallAgent(tokenCredential);
+        // Set up a camera device to use.
+        const _deviceManager = await callClient.getDeviceManager();
+        await _deviceManager.askDevicePermission({
+          audio: true,
+          video: true,
+        });
+        // Listen for an incoming call to accept.
+        _callAgent.on("incomingCall", async (args) => {
+          try {
+            const _incomingCall = args.incomingCall;
+            // @ts-ignore
+            setIncomingCall(_incomingCall);
+            // acceptCallButton.disabled = false;
+            // startCallButton.disabled = true;
+          } catch (error) {
+            console.error(error);
+          }
+        });
+        setCallAgent(_callAgent);
+        // @ts-ignore
+        setDeviceManager(_deviceManager);
+
+        // startCallButton.disabled = false;
+        // initializeCallAgentButton.disabled = true;
+      } catch (error) {
+        console.error("err", error);
+      }
+    };
+    initializeCallAgent();
   }, []);
 
   return (
@@ -375,59 +412,63 @@ const Video = ({ channel }: { channel: Channel }) => {
       >
         Hang up Call
       </button>
-      <button
-        id="accept-call-button"
-        type="button"
-        disabled={true}
-        onClick={async () => {
-          try {
-            const localVideoStream = await createLocalVideoStream();
-            const videoOptions = localVideoStream
-              ? { localVideoStreams: [localVideoStream] }
-              : undefined;
-            // @ts-ignore
-            const _call = await incomingCall.accept({ videoOptions });
-            // Subscribe to the call's properties and events.
-            subscribeToCall(_call);
-            setCall(_call);
-          } catch (error) {
-            console.error(error);
-          }
-        }}
-      >
-        Accept Call
-      </button>
-      <button
-        id="start-video-button"
-        type="button"
-        disabled={true}
-        onClick={async () => {
-          try {
-            const localVideoStream = await createLocalVideoStream();
-            // @ts-ignore
-            await call.startVideo(localVideoStream);
-          } catch (error) {
-            console.error(error);
-          }
-        }}
-      >
-        Start Video
-      </button>
-      <button
-        id="stop-video-button"
-        type="button"
-        disabled={true}
-        onClick={async () => {
-          try {
-            // @ts-ignore
-            await call.stopVideo(localVideoStream);
-          } catch (error) {
-            console.error(error);
-          }
-        }}
-      >
-        Stop Video
-      </button>
+      {false && (
+        <>
+          <button
+            id="accept-call-button"
+            type="button"
+            disabled={true}
+            onClick={async () => {
+              try {
+                const localVideoStream = await createLocalVideoStream();
+                const videoOptions = localVideoStream
+                  ? { localVideoStreams: [localVideoStream] }
+                  : undefined;
+                // @ts-ignore
+                const _call = await incomingCall.accept({ videoOptions });
+                // Subscribe to the call's properties and events.
+                subscribeToCall(_call);
+                setCall(_call);
+              } catch (error) {
+                console.error(error);
+              }
+            }}
+          >
+            Accept Call
+          </button>
+          <button
+            id="start-video-button"
+            type="button"
+            disabled={true}
+            onClick={async () => {
+              try {
+                const localVideoStream = await createLocalVideoStream();
+                // @ts-ignore
+                await call.startVideo(localVideoStream);
+              } catch (error) {
+                console.error(error);
+              }
+            }}
+          >
+            Start Video
+          </button>
+          <button
+            id="stop-video-button"
+            type="button"
+            disabled={true}
+            onClick={async () => {
+              try {
+                // @ts-ignore
+                await call.stopVideo(localVideoStream);
+              } catch (error) {
+                console.error(error);
+              }
+            }}
+          >
+            Stop Video
+          </button>
+        </>
+      )}
       <br />
       <br />
       <div

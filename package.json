@@ -29,7 +29,10 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy": "netlify deploy -d build/",
+    "deploy:prod": "netlify deploy --prod -d build/",
+    "deploy:production": "yarn deploy:prod"
   },
   "eslintConfig": {
     "extends": [

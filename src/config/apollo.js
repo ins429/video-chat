@@ -7,6 +7,8 @@ import { onError } from "@apollo/client/link/error";
 import absintheSocket from "./absintheSocket";
 import { isDevelopment } from "../utils";
 
+import { token } from "../components/CurrentUserContext";
+
 const cache = new InMemoryCache({
   dataIdFromObject: (object) => object.id,
 });
@@ -29,7 +31,7 @@ const errorLink = onError(
 
     if (networkError) {
       if (networkError.statusCode === 401) {
-        localStorage.removeItem("token");
+        localStorage?.removeItem("token");
         window.location.reload();
       }
       console.log("[Network error]", networkError);
@@ -45,13 +47,13 @@ const parseBatchResult = new ApolloLink((operation, forward) =>
 );
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem("token");
+  const authToken = localStorage ? localStorage.getItem("token") : token;
 
   // return the headers to the context so httpLink can read them
   return {
     headers: {
       ...headers,
-      authorization: token ? `Bearer ${token}` : "",
+      authorization: token ? `Bearer ${authToken}` : "",
     },
   };
 });
