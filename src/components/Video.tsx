@@ -264,6 +264,7 @@ const Video = ({ channel }: { channel: Channel }) => {
   );
 
   useEffect(() => {
+    console.log("pjlee useeffect");
     // setLogLevel("verbose");
     setLogLevel("error");
     AzureLogger.log = (...args: any[]) => {
@@ -271,6 +272,7 @@ const Video = ({ channel }: { channel: Channel }) => {
     };
 
     const initializeCallAgent = async () => {
+      console.log("pjlee initializeCallAgent");
       try {
         const callClient = new CallClient();
         const tokenCredential = new AzureCommunicationTokenCredential(
@@ -311,64 +313,18 @@ const Video = ({ channel }: { channel: Channel }) => {
   return (
     <div>
       <h4>Azure Communication Services - Calling Web SDK</h4>
-      <input
+      <textarea
         id="user-access-token"
-        type="text"
         placeholder="User access token"
-        style={{ marginBottom: "1em", width: "500px" }}
+        style={{ marginBottom: "1em", width: "800px", height: "160px" }}
         value={userAccessToken}
         onChange={(e) => setUserAccessToken(e.target.value)}
       />
-      <button
-        id="initialize-call-agent"
-        type="button"
-        onClick={async () => {
-          try {
-            const callClient = new CallClient();
-            const tokenCredential = new AzureCommunicationTokenCredential(
-              userAccessToken.trim()
-            );
-            const _callAgent = await callClient.createCallAgent(
-              tokenCredential
-            );
-            // Set up a camera device to use.
-            const _deviceManager = await callClient.getDeviceManager();
-            await _deviceManager.askDevicePermission({
-              audio: true,
-              video: true,
-            });
-            // Listen for an incoming call to accept.
-            _callAgent.on("incomingCall", async (args) => {
-              try {
-                const _incomingCall = args.incomingCall;
-                // @ts-ignore
-                setIncomingCall(_incomingCall);
-                // acceptCallButton.disabled = false;
-                // startCallButton.disabled = true;
-              } catch (error) {
-                console.error(error);
-              }
-            });
-            setCallAgent(_callAgent);
-            // @ts-ignore
-            setDeviceManager(_deviceManager);
-
-            // startCallButton.disabled = false;
-            // initializeCallAgentButton.disabled = true;
-          } catch (error) {
-            console.error(error);
-          }
-        }}
-      >
-        Initialize Call Agent
-      </button>
-      <br />
-      <br />
       <input
         id="callee-acs-user-id"
         type="text"
         placeholder="Enter callee's Azure Communication Services user identity in format: '8:acs:resourceId_userId'"
-        style={{ marginBottom: "1em", width: "500px", display: "block" }}
+        style={{ marginBottom: "1em", width: "800px", display: "block" }}
         value={calleeAcsUserId}
         onChange={(e) => setCalleeAcsUserId(e.target.value)}
       />
@@ -394,7 +350,7 @@ const Video = ({ channel }: { channel: Channel }) => {
             // @ts-ignore
             setCall(_call);
           } catch (error) {
-            console.error(error);
+            console.error("pjlee start call err", error);
           }
         }}
       >

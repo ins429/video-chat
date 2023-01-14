@@ -7,11 +7,13 @@ import { PageLoader } from "./components/Loader";
 import CurrentUserContext from "./components/CurrentUserContext";
 
 const AppRouter = () => {
-  const { loading } = useContext(CurrentUserContext);
+  const { loading, currentUser } = useContext(CurrentUserContext);
+  console.log("pjlee 000");
 
-  if (loading) {
+  if (loading || !currentUser) {
     return <PageLoader text />;
   }
+  console.log("pjlee 111");
 
   return (
     <Router>
